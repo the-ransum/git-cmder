@@ -5,9 +5,266 @@
 		<title>Git Cmder</title>
 		
 		<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.slim.js"></script>
+		<style id="compiled-css" type="text/css">
+			/* Skeleton */
+			* {
+				font-family: Arial;
+			}
+			code {
+			    font-size: 87.5%;
+			    color: #e83e8c;
+			    word-wrap: break-word;
+			}
+			pre, code, kbd, samp {
+			    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+			    font-size: 1em;
+			}
+			table, th, td {
+				border: 1px solid black;
+				border-collapse: collapse;
+			}
+			
+			/* Custom CSS */
+			li b {
+				cursor: pointer;
+			}
+			input#table-filter {
+				margin-bottom: 5px;
+			}
+			input#table-filter, 
+			table.commands-table {
+				width: 100%;
+			}
+			table.commands-table > tbody > tr > td {
+				padding: 5px;
+				vertical-align: top;
+			}
+			table.commands-table tr.hovered > td:first-child > b {
+				color: red;
+			}
+		</style>
 	</head>
 	
 	<body>
 		<h1>Git Cmder</h1>
+		
+		<div class="overviews">
+			<h2>Overviews</h2>
+			<ul class="section-overview"></ul>
+		</div>
+		
+		<input type="text" id="table-filter" placeholder="Search Table...">
+		<table class="commands-table">
+			<thead>
+				<tr class="headers">
+					<th>Category</th>
+					<th>Command</th>
+					<th>Description</th>
+				</tr>
+			</thead>
+			<tbody class="entries"></tbody>
+		</table>
+		
+		<script>
+			$(document).ready(function() {
+				var capitalize = (str) => str.charAt(0).toUpperCase() + str.substring(1);
+				
+				// Table filtering
+				$("#table-filter").on("keyup", function() {
+					var value = this.value.toLowerCase();
+					
+					$("table .entries > tr").filter(function() {
+						$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+					});
+				});
+				
+				
+				var gitCommands = ([{
+						"name": "SETUP",
+						"description": "Configuring user information used across all local repositories.",
+						"commands": [{
+							"description": "set a name that is identifiable for credit when review version history",
+							"command": "git config --global user.name “[firstname lastname]”"
+						}, {
+							"description": "set an email address that will be associated with each history marker",
+							"command": "git config --global user.email “[valid-email]”"
+						}, {
+							"description": "set automatic command line coloring for Git for easy reviewing",
+							"command": "git config --global color.ui auto"
+						}]
+					}, {
+						"name": "INIT",
+						"description": "Configuring user information, initializing and cloning repositories.",
+						"commands": [{
+							"description": "initialize an existing directory as a Git repository",
+							"command": "git init"
+						}, {
+							"description": "retrieve an entire repository from a hosted location via URL",
+							"command": "git clone [url]"
+						}]
+					}, {
+						"name": "STAGE & SNAPSHOT",
+						"description": "Working with snapshots and the Git staging area.",
+						"commands": [{
+							"description": "show modified files in working directory, staged for your next commit",
+							"command": "git status"
+						}, {
+							"description": "add a file as it looks now to your next commit (stage)",
+							"command": "git add [file]"
+						}, {
+							"description": "unstage a file while retaining the changes in working directory",
+							"command": "git reset [file]"
+						}, {
+							"description": "diff of what is changed but not staged",
+							"command": "git diff"
+						}, {
+							"description": "diff of what is staged but not yet commited",
+							"command": "git diff --staged"
+						}, {
+							"description": "commit your staged content as a new commit snapshot",
+							"command": "git commit -m “[descriptive message]”"
+						}]
+					}, {
+						"name": "BRANCH & MERGE",
+						"description": "Isolating work in branches, changing context, and integrating changes.",
+						"commands": [{
+							"description": "list your branches. a * will appear next to the currently active branch",
+							"command": "git branch"
+						}, {
+							"description": "create a new branch at the current commit",
+							"command": "git branch [branch-name]"
+						}, {
+							"description": "switch to another branch and check it out into your working directory",
+							"command": "git checkout"
+						}, {
+							"description": "merge the specified branch’s history into the current one",
+							"command": "git merge [branch]"
+						}, {
+							"description": "show all commits in the current branch’s history",
+							"command": "git log"
+						}]
+					}, {
+						"name": "INSPECT & COMPARE",
+						"description": "Examining logs, diffs and object information.",
+						"commands": [{
+							"description": "show the commit history for the currently active branch",
+							"command": "git log"
+						}, {
+							"description": "show the commits on branchA that are not on branchB",
+							"command": "git log branchB..branchA"
+						}, {
+							"description": "show the commits that changed file, even across renames",
+							"command": "git log --follow [file]"
+						}, {
+							"description": "show the diff of what is in branchA that is not in branchB",
+							"command": "git diff branchB...branchA"
+						}, {
+							"description": "show any object in Git in human-readable format",
+							"command": "git show [SHA]"
+						}]
+					}, {
+						"name": "SHARE & UPDATE",
+						"description": "Retrieving updates from another repository and updating local repos.",
+						"commands": [{
+							"description": "add a git URL as an alias",
+							"command": "git remote add [alias] [url]"
+						}, {
+							"description": "fetch down all the branches from that Git remote",
+							"command": "git fetch [alias]"
+						}, {
+							"description": "merge a remote branch into your current branch to bring it up to date",
+							"command": "git merge [alias]/[branch]"
+						}, {
+							"description": "Transmit local branch commits to the remote repository branch",
+							"command": "git push [alias] [branch]"
+						}, {
+							"description": "fetch and merge any commits from the tracking remote branch",
+							"command": "git pull"
+						}]
+					}, {
+						"name": "TRACKING PATH CHANGES",
+						"description": "Versioning file removes and path changes.",
+						"commands": [{
+							"description": "delete the file from project and stage the removal for commit",
+							"command": "git rm [file]"
+						}, {
+							"description": "change an existing file path and stage the move",
+							"command": "git mv [existing-path] [new-path]"
+						}, {
+							"description": "show all commit logs with indication of any paths that moved",
+							"command": "git log --stat -M"
+						}]
+					}, {
+						"name": "REWRITE HISTORY",
+						"description": "Rewriting branches, updating commits and clearing history.",
+						"commands": [{
+							"description": "apply any commits of current branch ahead of specified one",
+							"command": "git rebase [branch]"
+						}, {
+							"description": "clear staging area, rewrite working tree from specified commit",
+							"command": "git reset --hard [commit]"
+						}]
+					}, {
+						"name": "TEMPORARY COMMITS",
+						"description": "Temporarily store modified, tracked files in order to change branches.",
+						"commands": [{
+							"description": "Save modified and staged changes",
+							"command": "git stash"
+						}, {
+							"description": "list stack-order of stashed file changes",
+							"command": "git stash list"
+						}, {
+							"description": "write working from top of stash stack",
+							"command": "git stash pop"
+						}, {
+							"description": "discard the changes from top of stash stack",
+							"command": "git stash drop"
+						}]
+					}, {
+						"name": "IGNORING PATTERNS",
+						"description": "Preventing unintentional staging or commiting of files.",
+						"commands": [{
+							"description": "Save a file with desired paterns as .gitignore with either direct string matches or wildcard globs.",
+							"command": "logs/<br>.notes<br>pattern/"
+						}, {
+							"description": "system wide ignore patern for all local repositories",
+							"command": "git config --global core.excludesfile [file]"
+						}]
+					}]);
+				
+				function mouseEvents(e) {
+					var entries = $(".entries>tr");
+					if(e.type == "mouseover") {
+						entries.filter(`[name="${ $(this).parents("li").attr("name") }"]`).addClass("hovered");
+					} else {
+						entries.removeClass("hovered");
+					}
+				}
+				for(var section of gitCommands) {
+					if(!$(`.section-overview[name="${ section.name }"]`).length) {
+						$(".section-overview").append([
+							$("<li>").attr("name", section.name).append([
+								$("<b>").text(section.name).mouseover(mouseEvents).mouseout(mouseEvents),
+								` - `,
+								capitalize(section.description)
+							])
+						]);
+					}
+						
+					for(var entry of section.commands) {
+						var description = entry.description, 
+							command = entry.command;
+						
+						$(".entries").append([
+							$("<tr>").attr("name", section.name).append([
+							    $("<td>").html(`<b>${ section.name }</b>`),
+								$("<td>").html(`<code>${ command }</code>`),
+								$("<td>").html(capitalize(description)),
+							])
+						])
+					}
+				}
+			});
+		</script>
 	</body>
 </html>
